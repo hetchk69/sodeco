@@ -600,3 +600,6 @@ textarea {
   background: linear-gradient(to top, var(--color-bg) 60%, transparent);
   pointer-events: none;
 }
+
+.detail-row > td { background: #fafafa; padding: 12px 16px; }
+.detail-actions { display: flex; gap: 8px; margin-bottom: 12px; }

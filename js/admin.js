@@ -137,7 +137,7 @@ const AdminScreen = (() => {
       viewBtn.textContent = 'Ver respuestas';
       viewBtn.className = 'btn-secondary';
       viewBtn.disabled = !r.submission;
-      viewBtn.addEventListener('click', () => showDetail(r));
+      viewBtn.addEventListener('click', () => toggleDetail(r, tr, viewBtn));
       tdActions.appendChild(viewBtn);
 
       if (r.submission && r.submission.status === 'submitted') {
@@ -153,43 +153,153 @@ const AdminScreen = (() => {
     }
   }
 
-  async function showDetail(row) {
-    const panel = document.getElementById('admin-detail');
-    panel.textContent = '';
-
-    const title = document.createElement('h3');
-    const locationName = row.location ? row.location.name : 'Sin ubicación';
-    title.textContent = `${row.profile.full_name} — ${roleLabel(row.profile.role)} — ${locationName}`;
-    panel.appendChild(title);
-
-    const { data: answers, error } = await window.db
+  async function fetchAnswers(row) {
+    const { data, error } = await window.db
       .from('answers')
       .select('value_text, value_number, questions(text, section, position)')
-      .eq('submission_id', row.submission.id)
-      .order('question_id');
-    if (error) {
-      panel.appendChild(document.createTextNode('No se pudieron cargar las respuestas.'));
+      .eq('submission_id', row.submission.id);
+    if (error) throw error;
+    return data
+      .slice()
+      .sort((a, b) => (a.questions?.position || 0) - (b.questions?.position || 0))
+      .map((a) => ({
+        seccion: a.questions ? a.questions.section : '',
+        pregunta: a.questions ? a.questions.text : '(pregunta eliminada)',
+        respuesta: a.value_text ?? a.value_number ?? '',
+      }));
+  }
+
+  function summaryOf(row, answers) {
+    return {
+      usuario: row.profile.full_name,
+      telefono: row.profile.phone,
+      rol: row.profile.role,
+      ubicacion: row.location ? row.location.name : null,
+      estado: row.submission.status,
+      enviado: row.submission.submitted_at,
+      respuestas: answers,
+    };
+  }
+
+  function fileBase(row) {
+    const slug = row.profile.full_name
+      .normalize('NFD')
+      .replace(/[̀-ͯ]/g, '')
+      .replace(/[^a-zA-Z0-9]+/g, '_')
+      .replace(/^_|_$/g, '');
+    return `respuestas_${slug}_${new Date().toISOString().slice(0, 10)}`;
+  }
+
+  function saveBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function downloadJson(row, answers) {
+    const json = JSON.stringify(summaryOf(row, answers), null, 2);
+    saveBlob(new Blob([json], { type: 'application/json;charset=utf-8' }), `${fileBase(row)}.json`);
+  }
+
+  function downloadPdf(row, answers) {
+    const doc = new window.jspdf.jsPDF({ unit: 'pt', format: 'a4' });
+    const margin = 48;
+    const width = doc.internal.pageSize.getWidth() - margin * 2;
+    const bottom = doc.internal.pageSize.getHeight() - margin;
+    let y = margin;
+
+    const write = (text, { size = 10, bold = false, gap = 4 } = {}) => {
+      doc.setFont('helvetica', bold ? 'bold' : 'normal');
+      doc.setFontSize(size);
+      for (const line of doc.splitTextToSize(String(text), width)) {
+        if (y > bottom) {
+          doc.addPage();
+          y = margin;
+        }
+        doc.text(line, margin, y);
+        y += size * 1.3;
+      }
+      y += gap;
+    };
+
+    write('Levantamiento de Tiendas y Bodegas', { size: 15, bold: true, gap: 8 });
+    write(row.profile.full_name, { size: 12, bold: true });
+    write(`${roleLabel(row.profile.role)} — ${row.location ? row.location.name : 'Sin ubicación'}`);
+    write(`Teléfono: ${row.profile.phone} · Estado: ${statusLabel(row.submission.status)}`, { gap: 12 });
+
+    let section = null;
+    for (const a of answers) {
+      if (a.seccion !== section) {
+        section = a.seccion;
+        write(section || 'Sin sección', { size: 11, bold: true, gap: 4 });
+      }
+      write(a.pregunta, { bold: true, gap: 1 });
+      write(a.respuesta === '' ? '(sin respuesta)' : a.respuesta, { gap: 8 });
+    }
+    doc.save(`${fileBase(row)}.pdf`);
+  }
+
+  async function toggleDetail(row, tr, btn) {
+    const next = tr.nextElementSibling;
+    if (next && next.classList.contains('detail-row')) {
+      next.remove();
+      btn.textContent = 'Ver respuestas';
       return;
     }
 
-    const sorted = answers.slice().sort((a, b) => (a.questions?.position || 0) - (b.questions?.position || 0));
+    btn.disabled = true;
+    let answers;
+    try {
+      answers = await fetchAnswers(row);
+    } catch (e) {
+      alert('No se pudieron cargar las respuestas.');
+      btn.disabled = false;
+      return;
+    }
+    btn.disabled = false;
+    btn.textContent = 'Ocultar respuestas';
 
-    for (const a of sorted) {
+    const detailTr = document.createElement('tr');
+    detailTr.className = 'detail-row';
+    const td = document.createElement('td');
+    td.colSpan = 5;
+
+    const bar = document.createElement('div');
+    bar.className = 'detail-actions';
+    const pdfBtn = document.createElement('button');
+    pdfBtn.textContent = 'Descargar PDF';
+    pdfBtn.className = 'btn-secondary';
+    pdfBtn.addEventListener('click', () => downloadPdf(row, answers));
+    const jsonBtn = document.createElement('button');
+    jsonBtn.textContent = 'Descargar JSON';
+    jsonBtn.className = 'btn-secondary';
+    jsonBtn.addEventListener('click', () => downloadJson(row, answers));
+    bar.append(pdfBtn, jsonBtn);
+    td.appendChild(bar);
+
+    if (!answers.length) {
+      td.appendChild(document.createTextNode('Sin respuestas todavía.'));
+    }
+    for (const a of answers) {
       const item = document.createElement('div');
       item.className = 'question';
-
       const q = document.createElement('div');
       q.className = 'question-text';
-      q.textContent = a.questions ? a.questions.text : '(pregunta eliminada)';
-      item.appendChild(q);
-
+      q.textContent = a.pregunta;
       const v = document.createElement('div');
       v.className = 'question-purpose';
-      v.textContent = a.value_text ?? a.value_number ?? '(sin respuesta)';
-      item.appendChild(v);
-
-      panel.appendChild(item);
+      v.textContent = a.respuesta === '' ? '(sin respuesta)' : a.respuesta;
+      item.append(q, v);
+      td.appendChild(item);
     }
+
+    detailTr.appendChild(td);
+    tr.after(detailTr);
   }
 
   async function reopen(row) {
