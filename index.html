@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Levantamiento de Tiendas y Bodegas — Cerámicas del Valle</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+<div class="bg-shape bg-shape-1"></div>
+<div class="bg-shape bg-shape-2"></div>
+
+<!-- Pantalla 1: Login -->
+<section id="screen-login" class="screen">
+  <div class="card">
+    <div class="brand-logos">
+      <img src="assets/logos/ceramicas-del-valle.png" alt="Cerámicas del Valle" class="brand-logo" />
+      <span class="brand-logos-divider"></span>
+      <img src="assets/logos/expo-ceramicas.png" alt="Expo Cerámicas" class="brand-logo" />
+    </div>
+    <h1 class="brand-title">Levantamiento de Tiendas y Bodegas</h1>
+    <p class="subtitle">Ingresa con tu número de teléfono y la contraseña que te dieron.</p>
+
+    <form id="login-form">
+      <label for="login-phone-input">Teléfono</label>
+      <div class="phone-input-group">
+        <span id="login-phone-prefix" class="phone-prefix"></span>
+        <input id="login-phone-input" type="tel" inputmode="numeric" placeholder="3001234567" required />
+      </div>
+      <label for="login-password-input">Contraseña</label>
+      <input id="login-password-input" type="password" placeholder="Contraseña" required />
+      <button type="submit" class="btn-primary">Entrar</button>
+    </form>
+
+    <p id="login-error" class="error-text"></p>
+  </div>
+</section>
+
+<!-- Pantalla 2: Inicio -->
+<section id="screen-home" class="screen hidden">
+  <div class="card">
+    <div class="avatar-circle" id="home-avatar"></div>
+    <h1>¡Bienvenido/a, <span id="home-name"></span>!</h1>
+    <span class="role-badge" id="home-role-badge"><span id="home-role"></span></span>
+    <p id="home-description" class="home-description"></p>
+    <p id="home-count" class="home-count"></p>
+    <button id="home-continue" class="btn-primary">Continuar</button>
+    <button id="home-logout" class="btn-link">Cerrar sesión</button>
+  </div>
+</section>
+
+<!-- Pantalla 3: Formulario -->
+<section id="screen-form" class="screen hidden">
+  <div class="card card-wide">
+    <div class="form-header">
+      <div class="form-header-top">
+        <span id="form-progress" class="progress"></span>
+        <span id="form-status" class="save-status"></span>
+      </div>
+      <div class="progress-track">
+        <div id="form-progress-bar" class="progress-bar"></div>
+      </div>
+    </div>
+    <div id="form-questions"></div>
+    <p id="form-error" class="error-text"></p>
+    <button id="form-submit" class="btn-primary">Enviar</button>
+  </div>
+</section>
+
+<!-- Pantalla 4: Confirmación -->
+<section id="screen-confirm" class="screen hidden">
+  <div class="card">
+    <div class="success-icon">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M5 13l4 4L19 7" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <h1>¡Gracias!</h1>
+    <p class="subtitle">Tus respuestas quedaron enviadas. No se pueden volver a editar.</p>
+    <button id="confirm-logout" class="btn-link">Cerrar sesión</button>
+  </div>
+</section>
+
+<!-- Pantalla 5: Administración -->
+<section id="screen-admin" class="screen hidden">
+  <div class="card card-wide">
+    <div class="admin-top">
+      <h1>Administración</h1>
+      <button id="admin-logout" class="btn-link">Cerrar sesión</button>
+    </div>
+
+    <div class="admin-filters">
+      <select id="admin-filter-role">
+        <option value="">Todos los roles</option>
+        <option value="jefe_tienda">Jefe de Tienda</option>
+        <option value="asesor_tienda">Asesor de Tienda</option>
+        <option value="jefe_bodega">Jefe de Bodega</option>
+        <option value="gerencia">Gerencia</option>
+        <option value="admin">Administrador</option>
+      </select>
+      <select id="admin-filter-location"></select>
+      <button id="admin-export-csv" class="btn-secondary">Exportar CSV</button>
+    </div>
+
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Rol</th>
+          <th>Ubicación</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="admin-table-body"></tbody>
+    </table>
+
+    <div id="admin-detail" class="admin-detail"></div>
+
+    <h2>Agregar usuario</h2>
+    <form id="admin-add-form" class="admin-add-form">
+      <input id="admin-add-name" type="text" placeholder="Nombre completo" required />
+      <input id="admin-add-phone" type="tel" placeholder="+573001234567" required />
+      <select id="admin-add-role" required>
+        <option value="">Rol...</option>
+        <option value="jefe_tienda">Jefe de Tienda</option>
+        <option value="asesor_tienda">Asesor de Tienda</option>
+        <option value="jefe_bodega">Jefe de Bodega</option>
+        <option value="gerencia">Gerencia</option>
+        <option value="admin">Administrador</option>
+      </select>
+      <select id="admin-add-location"></select>
+      <button type="submit" class="btn-primary">Agregar</button>
+      <p id="admin-add-error" class="error-text"></p>
+    </form>
+  </div>
+</section>
+
+<footer class="app-footer">Desarrollo de Herramientas Digitales SODECO S. de R.L.</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="js/config.js"></script>
+<script src="js/supabase.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/form.js"></script>
+<script src="js/admin.js"></script>
+<script src="js/router.js"></script>
+</body>
+</html>

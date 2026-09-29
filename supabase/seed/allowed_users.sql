@@ -1,0 +1,14 @@
+-- allowed_users.sql
+--
+-- NO subir teléfonos reales a este archivo ni al repositorio. Es solo un
+-- ejemplo de formato. Carga los teléfonos reales desde el SQL editor de
+-- Supabase o desde el panel de administración una vez esté implementado.
+--
+-- El teléfono debe estar en formato E.164 (ej. +573001234567).
+
+-- Ejemplo (reemplazar):
+-- insert into allowed_users (phone, full_name, role, location_id) values
+--   ('+573000000001', 'Nombre Apellido', 'jefe_tienda', (select id from locations where name = 'Tienda Centro')),
+--   ('+573000000002', 'Nombre Apellido', 'asesor_tienda', (select id from locations where name = 'Tienda Centro')),
+--   ('+573000000003', 'Nombre Apellido', 'jefe_bodega', (select id from locations where name = 'Bodega Principal')),
+--   ('+573000000004', 'Nombre Apellido', 'admin', null);

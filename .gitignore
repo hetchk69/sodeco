@@ -1,0 +1,5 @@
+# Datos reales de usuarios (teléfonos, contraseñas): nunca se suben al repositorio.
+supabase/seed/allowed_users_real.sql
+supabase/scripts/create_users_real.sh
+supabase/scripts/*.csv
+supabase/scripts/*.txt
